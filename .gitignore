@@ -1,1 +1,47 @@
-.pytest_cache/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# Variáveis de ambiente — NUNCA commitar o .env real
+.env
+*.env
+
+# Credenciais GCP — NUNCA commitar
+gcp/credentials/
+*.json
+!gcp/example_credentials.json
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# Databricks
+.databricks/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Dados locais (não commitar dados brutos)
+data/
+*.parquet
+*.csv
+*.json.gz
