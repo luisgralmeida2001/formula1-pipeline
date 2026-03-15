@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  ingestion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: f1-ingestion
+    env_file:
+      - .env
+    volumes:
+      # Monta as credenciais GCP no container em runtime
+      # (nunca colocar credenciais dentro da imagem!)
+      - ./gcp/credentials:/app/credentials:ro
+    restart: "no"

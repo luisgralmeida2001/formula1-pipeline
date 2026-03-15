@@ -1,0 +1,15 @@
+# HTTP e APIs
+requests==2.31.0
+
+# GCP
+google-cloud-storage==2.16.0
+
+# Utilitários
+python-dotenv==1.0.1
+loguru==0.7.2
+
+# Desenvolvimento / qualidade de código
+pytest==8.2.0
+pytest-mock==3.14.0
+black==24.4.2
+ruff==0.4.4

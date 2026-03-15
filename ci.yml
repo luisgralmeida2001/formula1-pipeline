@@ -1,0 +1,59 @@
+name: CI — F1 Data Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint e Testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint com ruff
+        run: ruff check ingestion/
+
+      - name: Formatar com black (check)
+        run: black --check ingestion/
+
+      - name: Rodar testes
+        run: pytest ingestion/tests/ -v
+
+  dbt-check:
+    name: Validação dbt
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dbt
+        run: pip install dbt-bigquery
+
+      - name: dbt parse (valida sintaxe dos modelos)
+        working-directory: dbt/
+        run: dbt parse
+        env:
+          DBT_BIGQUERY_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+          DBT_BIGQUERY_DATASET: f1_gold
