@@ -11,5 +11,6 @@ loguru==0.7.2
 # Desenvolvimento / qualidade de código
 pytest==8.2.0
 pytest-mock==3.14.0
+requests-mock==1.12.1
 black==24.4.2
 ruff==0.4.4
