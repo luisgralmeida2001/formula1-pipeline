@@ -1,14 +1,15 @@
 """
 Ponto de entrada da ingestão F1.
 
-O que esse script faz:
-1. Lê as configurações do .env
-2. Busca o calendário da temporada via Ergast API
-3. Para cada corrida já realizada:
-   - Busca dados da OpenF1 (voltas, pit stops, posições, pilotos)
-   - Busca resultado final via Ergast
-   - Sobe tudo para o GCS (Bronze)
-4. Busca dados anuais (standings, circuitos) e sobe para o GCS
+Usamos exclusivamente a OpenF1 API (gratuita, sem autenticação).
+A Ergast API foi descontinuada em 2024.
+
+Fluxo:
+1. Busca todas as sessões da temporada
+2. Sobe as sessões para o GCS (bronze/sessions)
+3. Para cada corrida (session_type=Race) já realizada:
+   - Busca pilotos, voltas, pit stops e posições
+   - Sobe cada entidade particionada por round
 
 Rodando localmente:
     python -m ingestion.main
@@ -23,10 +24,9 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from loguru import logger
 
-from ingestion.extractors import ergast, openf1
+from ingestion.extractors import openf1
 from ingestion.loaders.gcs import upload_json
 
-# Carrega o .env automaticamente
 load_dotenv()
 
 
@@ -36,109 +36,74 @@ def get_config() -> dict:
         "bucket_name": os.getenv("GCP_BUCKET_NAME"),
         "season": int(os.getenv("F1_SEASON", "2025")),
     }
-
     missing = [k for k, v in config.items() if not v]
     if missing:
         raise ValueError(f"Variáveis de ambiente faltando: {missing}. Verifique o .env")
-
     return config
 
 
-def is_race_finished(race: dict) -> bool:
+def is_session_finished(session: dict) -> bool:
     """
-    Verifica se uma corrida já aconteceu comparando a data com hoje (UTC).
-    Só faz sentido buscar dados de corridas que já rolaram.
+    Verifica se uma sessão já aconteceu comparando date_end com agora (UTC).
+    A OpenF1 retorna date_end no formato ISO 8601.
     """
-    race_date_str = race.get("date", "")
-    if not race_date_str:
+    date_end_str = session.get("date_end", "")
+    if not date_end_str:
+        return False
+    try:
+        date_end = datetime.fromisoformat(date_end_str.replace("Z", "+00:00"))
+        return date_end < datetime.now(timezone.utc)
+    except ValueError:
         return False
 
-    race_date = datetime.fromisoformat(race_date_str).replace(tzinfo=timezone.utc)
-    return race_date < datetime.now(timezone.utc)
 
-
-def ingest_race(bucket_name: str, year: int, race: dict) -> None:
+def ingest_race_session(bucket_name: str, year: int, session: dict) -> None:
     """
-    Ingere todos os dados de uma corrida específica para o GCS.
-
-    Para cada corrida buscamos:
-    - OpenF1: pilotos, voltas, pit stops, posições
-    - Ergast: resultado final (posição, pontos, tempo)
+    Ingere todos os dados de uma sessão de corrida para o GCS.
+    Busca: pilotos, voltas, pit stops e posições.
     """
-    round_number = int(race["round"])
-    race_name = race.get("raceName", f"Round {round_number}")
-    logger.info(f"--- Ingerindo: {race_name} (round {round_number}) ---")
+    session_key = session["session_key"]
+    round_number = session.get("meeting_key", 0)
+    circuit = session.get("circuit_short_name", "unknown")
 
-    # Precisamos do session_key da OpenF1 para buscar dados detalhados
-    sessions = openf1.get_sessions(year)
-    race_sessions = [
-        s for s in sessions
-        if s.get("session_type") == "Race" and s.get("meeting_key") is not None
-    ]
+    logger.info(f"--- Ingerindo corrida: {circuit} (session_key={session_key}) ---")
 
-    # Encontra a sessão correspondente a esse round pelo nome do circuito
-    circuit_name = race.get("Circuit", {}).get("circuitId", "").lower()
-    matching_session = next(
-        (s for s in race_sessions if circuit_name in s.get("circuit_short_name", "").lower()),
-        None
-    )
+    drivers = openf1.get_drivers(session_key)
+    upload_json(bucket_name, drivers, "drivers", year, round_number)
 
-    if matching_session:
-        session_key = matching_session["session_key"]
-        logger.info(f"  Session key OpenF1: {session_key}")
+    laps = openf1.get_laps(session_key)
+    upload_json(bucket_name, laps, "laps", year, round_number)
 
-        drivers = openf1.get_drivers(session_key)
-        upload_json(bucket_name, drivers, "drivers", year, round_number)
+    pit_stops = openf1.get_pit_stops(session_key)
+    upload_json(bucket_name, pit_stops, "pit_stops", year, round_number)
 
-        laps = openf1.get_laps(session_key)
-        upload_json(bucket_name, laps, "laps", year, round_number)
-
-        pit_stops = openf1.get_pit_stops(session_key)
-        upload_json(bucket_name, pit_stops, "pit_stops", year, round_number)
-
-        positions = openf1.get_positions(session_key)
-        upload_json(bucket_name, positions, "positions", year, round_number)
-    else:
-        logger.warning(f"  Sessão OpenF1 não encontrada para {race_name} — pulando dados detalhados")
-
-    # Resultado final via Ergast
-    results = ergast.get_race_results(year, round_number)
-    upload_json(bucket_name, results, "race_results", year, round_number)
+    positions = openf1.get_positions(session_key)
+    upload_json(bucket_name, positions, "positions", year, round_number)
 
 
 def ingest_season(bucket_name: str, year: int) -> None:
     """
-    Ingere todos os dados anuais da temporada:
-    - Calendário completo
-    - Standings de pilotos e construtores
-    - Circuitos
-    - Dados de cada corrida já realizada
+    Ingere todos os dados da temporada via OpenF1.
     """
     logger.info(f"========== Iniciando ingestão da temporada {year} ==========")
 
-    calendar = ergast.get_race_calendar(year)
-    upload_json(bucket_name, calendar, "calendar", year)
-
-    driver_standings = ergast.get_driver_standings(year)
-    upload_json(bucket_name, driver_standings, "driver_standings", year)
-
-    constructor_standings = ergast.get_constructor_standings(year)
-    upload_json(bucket_name, constructor_standings, "constructor_standings", year)
-
-    circuits = ergast.get_circuits(year)
-    upload_json(bucket_name, circuits, "circuits", year)
-
+    # Busca e persiste todas as sessões do ano
     sessions = openf1.get_sessions(year)
     upload_json(bucket_name, sessions, "sessions", year)
+    logger.info(f"{len(sessions)} sessões encontradas em {year}")
 
-    finished_races = [r for r in calendar if is_race_finished(r)]
-    logger.info(f"{len(finished_races)} corridas já realizadas em {year}")
+    # Filtra só as corridas (Race) que já aconteceram
+    race_sessions = [
+        s for s in sessions
+        if s.get("session_type") == "Race" and is_session_finished(s)
+    ]
+    logger.info(f"{len(race_sessions)} corridas já realizadas em {year}")
 
-    for race in finished_races:
+    for session in race_sessions:
         try:
-            ingest_race(bucket_name, year, race)
+            ingest_race_session(bucket_name, year, session)
         except Exception as e:
-            logger.error(f"Erro ao ingerir {race.get('raceName')}: {e}")
+            logger.error(f"Erro ao ingerir sessão {session.get('session_key')}: {e}")
 
     logger.success(f"========== Ingestão {year} concluída ==========")
 

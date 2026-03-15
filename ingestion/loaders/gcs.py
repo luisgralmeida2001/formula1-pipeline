@@ -18,7 +18,7 @@ Por que JSON e não Parquet aqui?
 - JSON é o formato nativo das APIs
 - A conversão para Parquet acontece no Databricks (Silver)
 """
-
+import os
 import json
 from datetime import datetime, timezone
 
@@ -33,7 +33,8 @@ def _get_client() -> storage.Client:
     não precisa passar chave, o google-cloud-storage encontra
     as credenciais configuradas via 'gcloud auth application-default login'.
     """
-    return storage.Client()
+    project_id = os.getenv("data-pipeline-490304")
+    return storage.Client(project=project_id)
 
 
 def _build_blob_path(entity: str, year: int, round_number: int | None = None) -> str:
