@@ -28,6 +28,7 @@ dbt/.user.yml
 
 # Databricks
 .databricks/
+config_local.py
 
 # IDEs
 .vscode/
