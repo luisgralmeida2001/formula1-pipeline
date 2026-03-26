@@ -134,6 +134,7 @@ SEASON = 2025
 
 import json
 import os
+import pandas as pd
 
 # Lê os JSONs manualmente e cria o DataFrame
 def load_json_files(base_path, entity, season):
