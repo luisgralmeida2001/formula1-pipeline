@@ -15,7 +15,7 @@ Pipeline de dados end-to-end com dados da Fórmula 1, desenvolvido para estudo d
 ## Arquitetura Medalião
 
 ```
-API (OpenF1 + Ergast)
+API (OpenF1)
         │
         ▼
   [Bronze] GCS — dados brutos em JSON/Parquet
@@ -40,7 +40,6 @@ API (OpenF1 + Ergast)
 ## Fontes de dados
 
 - **OpenF1 API** — `https://api.openf1.org` (gratuita, sem autenticação, temporada atual)
-- **Ergast API** — `https://ergast.com/mrd` (gratuita, histórico completo desde 1950)
 
 ## Como rodar localmente
 

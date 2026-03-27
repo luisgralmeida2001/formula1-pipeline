@@ -3,7 +3,7 @@
 ## Fases do projeto
 
 ### Fase 1 — Ingestão (`ingestion/`)
-Script Python que consome as APIs OpenF1 e Ergast e persiste os dados brutos no GCS.
+Script Python que consome a OpenF1 API e persiste os dados brutos no GCS.
 Containerizado com Docker para garantir portabilidade.
 
 **Arquivos principais:**
