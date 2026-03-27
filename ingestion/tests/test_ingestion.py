@@ -17,6 +17,7 @@ from ingestion.loaders.gcs import _build_blob_path
 
 # ─── Testes de is_race_finished ───────────────────────────────────────────────
 
+
 def test_race_finished_returns_true_for_past_date():
     race = {"date": "2020-03-15"}
     assert is_race_finished(race) is True
@@ -33,6 +34,7 @@ def test_race_finished_returns_false_for_missing_date():
 
 
 # ─── Testes de _build_blob_path ───────────────────────────────────────────────
+
 
 def test_blob_path_with_round():
     path = _build_blob_path("laps", 2025, 1)
@@ -53,6 +55,7 @@ def test_blob_path_round_zero_padded():
 
 # ─── Testes de get_config ─────────────────────────────────────────────────────
 
+
 def test_get_config_raises_if_bucket_missing(monkeypatch):
     monkeypatch.delenv("GCP_BUCKET_NAME", raising=False)
     monkeypatch.setenv("F1_SEASON", "2025")
@@ -69,6 +72,7 @@ def test_get_config_returns_correct_values(monkeypatch):
 
 
 # ─── Testes de get_sessions (mock HTTP) ───────────────────────────────────────
+
 
 def test_get_sessions_returns_list(requests_mock):
     """

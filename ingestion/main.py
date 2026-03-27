@@ -94,7 +94,8 @@ def ingest_season(bucket_name: str, year: int) -> None:
 
     # Filtra só as corridas (Race) que já aconteceram
     race_sessions = [
-        s for s in sessions
+        s
+        for s in sessions
         if s.get("session_type") == "Race" and is_session_finished(s)
     ]
     logger.info(f"{len(race_sessions)} corridas já realizadas em {year}")

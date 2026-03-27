@@ -18,6 +18,7 @@ Por que JSON e não Parquet aqui?
 - JSON é o formato nativo das APIs
 - A conversão para Parquet acontece no Databricks (Silver)
 """
+
 import os
 import json
 from datetime import datetime, timezone
@@ -75,7 +76,9 @@ def upload_json(
         O caminho completo do blob criado no GCS (gs://bucket/path)
     """
     if not data:
-        logger.warning(f"Nenhum dado para {entity} | year={year} round={round_number} — upload ignorado")
+        logger.warning(
+            f"Nenhum dado para {entity} | year={year} round={round_number} — upload ignorado"
+        )
         return ""
 
     client = _get_client()
