@@ -9,7 +9,6 @@ que retorna dados controlados — assim testamos só a nossa lógica.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
 
 from ingestion.main import is_race_finished, get_config
 from ingestion.extractors.openf1 import get_sessions
