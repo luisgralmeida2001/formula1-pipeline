@@ -48,12 +48,26 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Instalar dbt
-        run: pip install dbt-bigquery
+      - name: Instalar dbt-databricks
+        run: pip install dbt-databricks
+
+      - name: Criar profiles.yml para CI
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'EOF'
+          f1_pipeline:
+            target: dev
+            outputs:
+              dev:
+                type: databricks
+                host: community.cloud.databricks.com
+                http_path: /sql/1.0/warehouses/598c5e04b5c9ca75
+                token: dummy_token_for_syntax_check
+                catalog: main
+                schema: f1_gold
+                threads: 1
+          EOF
 
       - name: dbt parse (valida sintaxe dos modelos)
         working-directory: dbt/
-        run: dbt parse
-        env:
-          DBT_BIGQUERY_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
-          DBT_BIGQUERY_DATASET: f1_gold
+        run: dbt parse --no-partial-parse
