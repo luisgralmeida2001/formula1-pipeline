@@ -10,7 +10,7 @@ que retorna dados controlados — assim testamos só a nossa lógica.
 
 import pytest
 
-from ingestion.main import is_race_finished, get_config
+from ingestion.main import is_session_finished as is_race_finished, get_config
 from ingestion.extractors.openf1 import get_sessions
 from ingestion.loaders.gcs import _build_blob_path
 
@@ -19,12 +19,12 @@ from ingestion.loaders.gcs import _build_blob_path
 
 
 def test_race_finished_returns_true_for_past_date():
-    race = {"date": "2020-03-15"}
+    race = {"date_end": "2020-03-15T15:00:00+00:00"}
     assert is_race_finished(race) is True
 
 
 def test_race_finished_returns_false_for_future_date():
-    race = {"date": "2099-12-31"}
+    race = {"date_end": "2099-12-31T15:00:00+00:00"}
     assert is_race_finished(race) is False
 
 
