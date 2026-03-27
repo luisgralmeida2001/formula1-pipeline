@@ -9,7 +9,6 @@ Containerizado com Docker para garantir portabilidade.
 **Arquivos principais:**
 - `ingestion/main.py` — ponto de entrada
 - `ingestion/extractors/openf1.py` — cliente da OpenF1 API
-- `ingestion/extractors/ergast.py` — cliente da Ergast API
 - `ingestion/loaders/gcs.py` — upload para o GCS
 
 ---
@@ -37,16 +36,5 @@ Notebooks PySpark que leem o Bronze, limpam os dados (Silver) e criam agregaçõ
 
 ---
 
-### Fase 4 — Modelagem (dbt)
-Modelos dbt rodando sobre as tabelas Gold no BigQuery.
-
-**Modelos principais:**
-- `fct_race_results` — resultado de cada corrida por piloto
-- `fct_pit_stops` — análise de pit stops por equipe
-- `dim_drivers` — dimensão de pilotos
-- `dim_circuits` — dimensão de circuitos
-
----
-
-### Fase 5 — CI/CD (GitHub Actions)
-Workflow que roda a cada push: lint, testes e validação dos modelos dbt.
+### Fase 4 — CI/CD (GitHub Actions)
+Workflow que roda a cada push: lint com ruff, formatação com black e testes unitários com pytest.

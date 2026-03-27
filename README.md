@@ -9,8 +9,6 @@ Pipeline de dados end-to-end com dados da Fórmula 1, desenvolvido para estudo d
 | Ingestão | Python + Docker |
 | Storage (raw) | Google Cloud Storage (GCS) |
 | Processamento | Databricks + PySpark |
-| Modelagem | dbt |
-| Data Warehouse | BigQuery |
 | CI/CD | GitHub Actions |
 | Cloud | GCP |
 
@@ -49,7 +47,7 @@ API (OpenF1 + Ergast)
 ### Pré-requisitos
 - Docker instalado
 - Conta GCP com projeto criado
-- Credenciais GCP configuradas (ver `gcp/README.md`)
+- Credenciais GCP (service account JSON)
 
 ### 1. Clone o repositório
 ```bash
@@ -65,39 +63,32 @@ cp .env.example .env
 
 ### 3. Execute a ingestão via Docker
 ```bash
-docker build -t f1-ingestion ./ingestion
-docker run --env-file .env f1-ingestion
+docker build -t f1-ingestion .
+docker run --env-file .env -v $(pwd)/gcp/credentials:/app/credentials f1-ingestion
 ```
 
 ## Estrutura do projeto
 
 ```
-f1-data-pipeline/
-├── ingestion/          # Scripts Python de extração das APIs
+formula1-pipeline/
+├── ingestion/              # Aplicação Python de extração das APIs
+│   ├── extractors/         # Clientes das APIs (OpenF1)
+│   ├── loaders/            # Upload para o GCS
+│   └── tests/              # Testes unitários
 ├── databricks/
-│   ├── notebooks/      # Notebooks PySpark (Bronze → Silver → Gold)
-│   └── jobs/           # Definições de jobs do Databricks Workflows
-├── dbt/
-│   ├── models/
-│   │   ├── bronze/     # Fontes raw (sources)
-│   │   ├── silver/     # Dados limpos
-│   │   └── gold/       # Modelos analíticos finais
-│   ├── tests/          # Testes customizados
-│   └── macros/         # Macros reutilizáveis
-├── gcp/                # Configs e scripts de infraestrutura GCP
+│   └── notebooks/          # Notebooks PySpark (Bronze → Silver → Gold)
+├── docs/                   # Documentação adicional
 ├── .github/
-│   └── workflows/      # Pipelines de CI/CD
-├── docs/               # Documentação adicional
-├── Dockerfile          # Container da ingestão
-├── docker-compose.yml  # Orquestração local (dev)
-├── .env.example        # Template de variáveis de ambiente
-└── requirements.txt    # Dependências Python
+│   └── workflows/          # Pipelines de CI/CD
+├── Dockerfile              # Container da ingestão
+├── docker-compose.yml      # Orquestração local (dev)
+├── .env.example            # Template de variáveis de ambiente
+└── requirements.txt        # Dependências Python
 ```
 
 ## Status do projeto
 
-- [ ] Fase 1 — Ingestão com Python + Docker
-- [ ] Fase 2 — Armazenamento no GCS (Bronze)
-- [ ] Fase 3 — Transformações PySpark no Databricks (Silver + Gold)
-- [ ] Fase 4 — Modelagem com dbt
-- [ ] Fase 5 — CI/CD com GitHub Actions
+- [x] Fase 1 — Ingestão com Python + Docker
+- [x] Fase 2 — Armazenamento no GCS (Bronze)
+- [x] Fase 3 — Transformações PySpark no Databricks (Silver + Gold)
+- [x] Fase 4 — CI/CD com GitHub Actions

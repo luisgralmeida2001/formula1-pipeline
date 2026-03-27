@@ -18,17 +18,14 @@ env/
 # Credenciais GCP — NUNCA commitar
 gcp/credentials/
 *.json
-!gcp/example_credentials.json
-
-# dbt
-dbt/target/
-dbt/dbt_packages/
-dbt/logs/
-dbt/.user.yml
 
 # Databricks
 .databricks/
 config_local.py
+
+# Testes e linting
+.pytest_cache/
+.ruff_cache/
 
 # IDEs
 .vscode/
