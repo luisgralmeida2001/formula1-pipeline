@@ -20,23 +20,17 @@
 
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
-import pandas as pd
 
-# Lê as tabelas Silver salvas pelo notebook 01
 df_sessions  = spark.table("f1_silver.sessions")
 df_drivers   = spark.table("f1_silver.drivers")
 df_laps      = spark.table("f1_silver.laps")
 df_pit       = spark.table("f1_silver.pit_stops")
 df_positions = spark.table("f1_silver.positions")
 
-# Cria o schema Gold se não existir
 spark.sql("CREATE SCHEMA IF NOT EXISTS f1_gold")
 
-# Filtra só sessões de corrida — exclui quali, treinos, etc.
 df_races = df_sessions.filter(F.col("session_type") == "Race")
-
-print(f"Corridas disponíveis: {df_races.count()}")
-df_races.select("session_key", "circuit_short_name", "date_start").show(10, truncate=False)
+print(f"Corridas: {df_races.count()}")
 
 # COMMAND ----------
 
