@@ -15,7 +15,7 @@ Pipeline de dados end-to-end com dados da Fórmula 1, desenvolvido para estudo d
 ## Arquitetura Medalião
 
 ```
-API (OpenF1)
+  API (OpenF1)
         │
         ▼
   [Bronze] GCS — dados brutos em JSON/Parquet
@@ -25,9 +25,6 @@ API (OpenF1)
         │
         ▼
   [Gold] Databricks + dbt — modelos analíticos
-        │
-        ▼
-  [Data Warehouse] BigQuery — tabelas finais
 ```
 
 ## Perguntas que o projeto responde
