@@ -24,7 +24,7 @@ Pipeline de dados end-to-end com dados da Fórmula 1, desenvolvido para estudo d
   [Silver] Databricks — limpeza, tipagem, deduplicação
         │
         ▼
-  [Gold] Databricks + dbt — modelos analíticos
+  [Gold] Databricks — modelos analíticos
 ```
 
 ## Perguntas que o projeto responde
